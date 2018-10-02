@@ -1,2 +1,2 @@
-# r-geomstats
+# rgeomstats
 Geomstats for R
