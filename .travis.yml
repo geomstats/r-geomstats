@@ -1,4 +1,6 @@
 language: r
+before_install:
+     - tlmgr install index
 r_packages:
      - covr
 r_github_packages:
