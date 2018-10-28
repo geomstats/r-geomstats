@@ -1,10 +1,2 @@
 language: r
-before_install:
-     - tlmgr install index
-r_packages:
-     - covr
-r_github_packages:
-     - r-lib/covr
-after_success:
-     - Rscript -e 'covr::codecov()'
-
+warnings_are_errors: false
