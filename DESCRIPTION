@@ -11,8 +11,13 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.0
+Imports:
+    ggplot2,
+    reticulate,
+    rlist,
+    plotly
 Suggests:
     testthat,
     covr
-Collate: 
-  'manifold.R' 'euclidean_space.R' 'riemannian_metric.R' 'invariant_metric.R' 'special_orthogonal_group.R' 'vectorization.R'
+Collate:
+  'manifold.R' 'euclidean_space.R' 'riemannian_metric.R' 'invariant_metric.R' 'special_orthogonal_group.R' 'vectorization.R' 'visualization.R'

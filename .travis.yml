@@ -2,4 +2,7 @@ language: r
 warnings_are_errors: false
 
 after_success:
-  - Rscript -e 'devtools::install();devtools::test()'
+      - Rscript -e 'devtools::install();devtools::test()'
+
+after_failure:
+      - cat /home/travis/build/geomstats/rgeomstats/rgeomstats.Rcheck/00install.out
