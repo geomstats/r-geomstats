@@ -87,34 +87,30 @@ SpecialOrthogonalGroup <- setRefClass("SpecialOrthogonalGroup",
       if (.self$n == 3) {
         levi.civita.symbol <- array(data = c(
           c(0, 0, 0),
-          c(0, 0, 1),
-          c(0, -1, 0),
           c(0, 0, -1),
-          c(0, 0, 0),
-          c(1, 0, 0),
           c(0, 1, 0),
+          c(0, 0, 1),
+          c(0, 0, 0),
           c(-1, 0, 0),
+          c(0, -1, 0),
+          c(1, 0, 0),
           c(0, 0, 0)
         ), dim = c(3, 3, 3)
         )
-
-        basis.vec.1 <- ToNdarray(array(c(1, 0, 0) * n.vecs), to.ndim = 2)
-        basis.vec.2 <- ToNdarray(array(c(0, 1, 0) * n.vecs), to.ndim = 2)
-        basis.vec.3 <- ToNdarray(array(c(0, 0, 1) * n.vecs), to.ndim = 2)
 
         ApplyLeviCivitaSymbol <- function(vec) {
           array(cbind(
           vec %*% levi.civita.symbol[1, , ],
           vec %*% levi.civita.symbol[2, , ],
           vec %*% levi.civita.symbol[3, , ]),
-          dim = c(3, 3))
+          dim=c(3,3))
         }
 
-        cross.prod.1 <- vec %*% ApplyLeviCivitaSymbol(basis.vec.1)
-        cross.prod.2 <- vec %*% ApplyLeviCivitaSymbol(basis.vec.2)
-        cross.prod.3 <- vec %*% ApplyLeviCivitaSymbol(basis.vec.3)
+        cross.prod.1 <- vec %*% ApplyLeviCivitaSymbol(array(c(1,0,0)))
+        cross.prod.2 <- vec %*% ApplyLeviCivitaSymbol(array(c(0,1,0)))
+        cross.prod.3 <- vec %*% ApplyLeviCivitaSymbol(array(c(0,0,1)))
 
-        skew.mat <- array(c(cross.prod.1,
+        skew.mat <- -array(c(cross.prod.1,
                             cross.prod.2,
                             cross.prod.3), dim = c(n.vecs, .self$n, .self$n))
       }
@@ -131,7 +127,7 @@ SpecialOrthogonalGroup <- setRefClass("SpecialOrthogonalGroup",
       if (.self$n == 3) {
         point <- .self$Regularize(point)
         n.points <- dim(point)[1]
-        angle <- sqrt(sum(point ^ 2))
+        angle <- apply(point, 1, function(x){sqrt(sum(x ^ 2))})
         angle <- ToNdarray((array(angle)), to.ndim = 2, axis = 1)
 
         coef.1 <- array(0, dim = c(n.points, 1))
@@ -172,7 +168,7 @@ SpecialOrthogonalGroup <- setRefClass("SpecialOrthogonalGroup",
                               / angle[mask.else] ^ 2)
         jacobian <- array(0, dim = c(n.points, .self$dimension, .self$dimension))
 
-        for (i in range(n.points)[1]:range(n.points)[2]) {
+        for (i in 1:n.points) {
           sign <- -1
           if (left.or.right == "left") {
             sign <- 1
@@ -181,7 +177,7 @@ SpecialOrthogonalGroup <- setRefClass("SpecialOrthogonalGroup",
           jacobian[i, , ] <- (
             coef.1[i] * diag(1, .self$dimension, .self$dimension)
             + coef.2[i] * outer(point[i, ], point[i, ])
-            + sign * .self$SkewMatrixFromVector(ToNdarray(array(point[1, ]), to.ndim = 2))[i, , ] / 2)
+            + sign * (.self$SkewMatrixFromVector(ToNdarray(array(point[1, ]), to.ndim = 2)) / 2)[1,,])
         }
       }
       stopifnot(length(dim(jacobian)) == 3)
@@ -453,6 +449,25 @@ SpecialOrthogonalGroup <- setRefClass("SpecialOrthogonalGroup",
       "Compute the group logarithm of the point at the identity."
       tangent.vec <- .self$Regularize(point)
       return(tangent.vec)
+    },
+
+    GroupLog = function(point, base.point=NULL){
+      "Compute the group logarithm at point base_point
+      of the point point."
+      point <- ToNdarray(point, to.ndim = 2)
+      base.point <- ToNdarray(base.point, to.ndim = 2)
+      point <- .self$Regularize(point)
+      base.point <- .self$Regularize(base.point)
+      n.points <- dim(point)[1]
+      n.base.points <- dim(base.point)[1]
+      jacobian <- .self$JacobianTranslation(base.point)
+      point.near.id <- .self$Compose(.self$Inverse(base.point), point)
+      group.log.from.id <- .self$GroupLogFromIdentity(point.near.id)
+      group.log <- array(0, dim = c(n.points, 3))
+      for (n in 1:n.points) {
+        group.log[n,] <- aperm(jacobian, c(1, 3, 2))[n,,] %*% group.log.from.id[n,]
+      }
+      return(group.log)
     }
   )
 )
